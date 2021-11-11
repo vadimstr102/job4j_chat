@@ -1,10 +1,13 @@
-package ru.job4.chat.controller;
+package ru.job4j.chat.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import ru.job4.chat.model.Person;
-import ru.job4.chat.repository.PersonRepository;
+import ru.job4j.chat.model.Person;
+import ru.job4j.chat.model.Role;
+import ru.job4j.chat.repository.PersonRepository;
+import ru.job4j.chat.repository.RoleRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,9 +17,13 @@ import java.util.stream.StreamSupport;
 @RequestMapping("/persons")
 public class PersonController {
     private final PersonRepository personRepository;
+    private final RoleRepository roleRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public PersonController(PersonRepository personRepository) {
+    public PersonController(PersonRepository personRepository, RoleRepository roleRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.personRepository = personRepository;
+        this.roleRepository = roleRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     @GetMapping("/")
@@ -37,6 +44,9 @@ public class PersonController {
 
     @PostMapping("/")
     public ResponseEntity<Person> create(@RequestBody Person person) {
+        Role role = roleRepository.findByRole("ROLE_USER");
+        person.setRole(role);
+        person.setPassword(bCryptPasswordEncoder.encode(person.getPassword()));
         return new ResponseEntity<>(
                 personRepository.save(person),
                 HttpStatus.CREATED

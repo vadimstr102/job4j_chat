@@ -1,7 +1,7 @@
-package ru.job4.chat.repository;
+package ru.job4j.chat.repository;
 
 import org.springframework.data.repository.CrudRepository;
-import ru.job4.chat.model.Room;
+import ru.job4j.chat.model.Room;
 
 public interface RoomRepository extends CrudRepository<Room, Integer> {
 }

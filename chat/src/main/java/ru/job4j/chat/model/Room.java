@@ -1,4 +1,4 @@
-package ru.job4.chat.model;
+package ru.job4j.chat.model;
 
 import javax.persistence.*;
 import java.util.List;
