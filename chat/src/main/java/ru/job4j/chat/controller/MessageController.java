@@ -3,6 +3,7 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Message;
 import ru.job4j.chat.repository.MessageRepository;
 
@@ -28,15 +29,17 @@ public class MessageController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Message> findById(@PathVariable int id) {
-        var message = messageRepository.findById(id);
-        return new ResponseEntity<>(
-                message.orElse(new Message()),
-                message.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
+        var message = messageRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message is not found. Please check the data")
         );
+        return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
     @PostMapping("/")
     public ResponseEntity<Message> create(@RequestBody Message message) {
+        if (message.getText() == null || message.getPerson() == null || message.getRoom() == null) {
+            throw new NullPointerException("Text, person and room mustn't be empty");
+        }
         return new ResponseEntity<>(
                 messageRepository.save(message),
                 HttpStatus.CREATED
@@ -45,6 +48,9 @@ public class MessageController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Message message) {
+        if (message.getId() == 0 || message.getText() == null) {
+            throw new NullPointerException("Id and text mustn't be empty");
+        }
         messageRepository.save(message);
         return ResponseEntity.ok().build();
     }

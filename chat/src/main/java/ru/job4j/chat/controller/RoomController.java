@@ -3,6 +3,7 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.repository.RoomRepository;
 
@@ -28,15 +29,17 @@ public class RoomController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Room> findById(@PathVariable int id) {
-        var room = roomRepository.findById(id);
-        return new ResponseEntity<>(
-                room.orElse(new Room()),
-                room.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
+        var room = roomRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room is not found. Please check the data")
         );
+        return new ResponseEntity<>(room, HttpStatus.OK);
     }
 
     @PostMapping("/")
     public ResponseEntity<Room> create(@RequestBody Room room) {
+        if (room.getName() == null) {
+            throw new NullPointerException("Room name mustn't be empty");
+        }
         return new ResponseEntity<>(
                 roomRepository.save(room),
                 HttpStatus.CREATED
@@ -45,6 +48,9 @@ public class RoomController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Room room) {
+        if (room.getId() == 0 || room.getName() == null) {
+            throw new NullPointerException("Room id and name mustn't be empty");
+        }
         roomRepository.save(room);
         return ResponseEntity.ok().build();
     }

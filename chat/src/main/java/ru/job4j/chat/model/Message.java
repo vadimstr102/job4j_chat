@@ -11,7 +11,7 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String text;
-    private Timestamp created;
+    private Timestamp created = new Timestamp(System.currentTimeMillis());
 
     @ManyToOne
     @JoinColumn(name = "person_id")
