@@ -21,10 +21,11 @@ public class MessageController {
     }
 
     @GetMapping("/")
-    public List<Message> findAll() {
-        return StreamSupport.stream(
-                messageRepository.findAll().spliterator(), false
-        ).collect(Collectors.toList());
+    public ResponseEntity<List<Message>> findAll() {
+        return new ResponseEntity<>(
+                StreamSupport.stream(messageRepository.findAll().spliterator(), false).collect(Collectors.toList()),
+                HttpStatus.OK
+        );
     }
 
     @GetMapping("/{id}")

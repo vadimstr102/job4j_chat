@@ -21,10 +21,11 @@ public class RoomController {
     }
 
     @GetMapping("/")
-    public List<Room> findAll() {
-        return StreamSupport.stream(
-                roomRepository.findAll().spliterator(), false
-        ).collect(Collectors.toList());
+    public ResponseEntity<List<Room>> findAll() {
+        return new ResponseEntity<>(
+                StreamSupport.stream(roomRepository.findAll().spliterator(), false).collect(Collectors.toList()),
+                HttpStatus.OK
+        );
     }
 
     @GetMapping("/{id}")
