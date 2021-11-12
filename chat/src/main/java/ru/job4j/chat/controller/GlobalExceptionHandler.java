@@ -18,13 +18,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = {NullPointerException.class})
-    public void exceptionHandler(Exception e, HttpServletResponse response) throws IOException {
+    public void exceptionHandler(HttpServletResponse response) throws IOException {
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setContentType("application/json");
         response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() {
             {
                 put("message", "Some fields are empty");
-                put("details", e.getMessage());
             }
         }));
     }

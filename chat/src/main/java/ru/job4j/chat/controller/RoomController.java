@@ -38,21 +38,24 @@ public class RoomController {
 
     @PostMapping("/")
     public ResponseEntity<Room> create(@RequestBody Room room) {
-        if (room.getName() == null) {
-            throw new NullPointerException("Room name mustn't be empty");
+        try {
+            room = roomRepository.save(room);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room name mustn't be empty");
         }
-        return new ResponseEntity<>(
-                roomRepository.save(room),
-                HttpStatus.CREATED
-        );
+        return new ResponseEntity<>(room, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Room room) {
-        if (room.getId() == 0 || room.getName() == null) {
-            throw new NullPointerException("Room id and name mustn't be empty");
+        if (roomRepository.findById(room.getId()).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room with this id is not found");
         }
-        roomRepository.save(room);
+        try {
+            roomRepository.save(room);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room name mustn't be empty");
+        }
         return ResponseEntity.ok().build();
     }
 

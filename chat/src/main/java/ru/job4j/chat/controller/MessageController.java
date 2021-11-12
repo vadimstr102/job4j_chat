@@ -38,21 +38,24 @@ public class MessageController {
 
     @PostMapping("/")
     public ResponseEntity<Message> create(@RequestBody Message message) {
-        if (message.getText() == null || message.getPerson() == null || message.getRoom() == null) {
-            throw new NullPointerException("Text, person and room mustn't be empty");
+        try {
+            message = messageRepository.save(message);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Text, person and room mustn't be empty");
         }
-        return new ResponseEntity<>(
-                messageRepository.save(message),
-                HttpStatus.CREATED
-        );
+        return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Message message) {
-        if (message.getId() == 0 || message.getText() == null) {
-            throw new NullPointerException("Id and text mustn't be empty");
+        if (messageRepository.findById(message.getId()).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message with this id is not found");
         }
-        messageRepository.save(message);
+        try {
+            messageRepository.save(message);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Text, person and room mustn't be empty");
+        }
         return ResponseEntity.ok().build();
     }
 

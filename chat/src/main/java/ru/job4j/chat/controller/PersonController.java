@@ -51,9 +51,6 @@ public class PersonController {
 
     @PostMapping("/")
     public ResponseEntity<Person> create(@RequestBody Person person) {
-        if (person.getLogin() == null || person.getPassword() == null) {
-            throw new NullPointerException("Login and password mustn't be empty");
-        }
         if (person.getLogin().length() < 2) {
             throw new IllegalArgumentException("Invalid login. Login length must be more than 1 character");
         }
@@ -71,8 +68,14 @@ public class PersonController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        if (person.getId() == 0 || person.getLogin() == null || person.getPassword() == null) {
-            throw new NullPointerException("Id, login and password mustn't be empty");
+        if (personRepository.findById(person.getId()).isEmpty()) {
+            throw new IllegalArgumentException("Person with this id is not found");
+        }
+        if (person.getLogin().length() < 2) {
+            throw new IllegalArgumentException("Invalid login. Login length must be more than 1 character");
+        }
+        if (person.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Invalid password. Password length must be more than 5 character");
         }
         personRepository.save(person);
         return ResponseEntity.ok().build();
