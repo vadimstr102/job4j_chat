@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Message;
 import ru.job4j.chat.repository.MessageRepository;
+import ru.job4j.chat.service.ObjectPatcher;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -65,5 +67,17 @@ public class MessageController {
         message.setId(id);
         messageRepository.delete(message);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/")
+    public ResponseEntity<Message> patch(@RequestBody Message message) throws InvocationTargetException, IllegalAccessException {
+        Message patchableMessage = messageRepository.findById(message.getId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+        ObjectPatcher.patch(patchableMessage, message);
+        return new ResponseEntity<>(
+                messageRepository.save(patchableMessage),
+                HttpStatus.OK
+        );
     }
 }

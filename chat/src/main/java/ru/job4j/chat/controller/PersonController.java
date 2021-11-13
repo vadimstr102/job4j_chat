@@ -10,9 +10,11 @@ import ru.job4j.chat.model.Person;
 import ru.job4j.chat.model.Role;
 import ru.job4j.chat.repository.PersonRepository;
 import ru.job4j.chat.repository.RoleRepository;
+import ru.job4j.chat.service.ObjectPatcher;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,6 +89,18 @@ public class PersonController {
         person.setId(id);
         personRepository.delete(person);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/")
+    public ResponseEntity<Person> patch(@RequestBody Person person) throws InvocationTargetException, IllegalAccessException {
+        Person patchablePerson = personRepository.findById(person.getId()).orElseThrow(
+                () -> new IllegalArgumentException("Person with this id is not found")
+        );
+        ObjectPatcher.patch(patchablePerson, person);
+        return new ResponseEntity<>(
+                personRepository.save(patchablePerson),
+                HttpStatus.OK
+        );
     }
 
     @ExceptionHandler(value = {IllegalArgumentException.class})

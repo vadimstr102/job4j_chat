@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.repository.RoomRepository;
+import ru.job4j.chat.service.ObjectPatcher;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -65,5 +67,17 @@ public class RoomController {
         room.setId(id);
         roomRepository.delete(room);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/")
+    public ResponseEntity<Room> patch(@RequestBody Room room) throws InvocationTargetException, IllegalAccessException {
+        Room patchableRoom = roomRepository.findById(room.getId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+        ObjectPatcher.patch(patchableRoom, room);
+        return new ResponseEntity<>(
+                roomRepository.save(patchableRoom),
+                HttpStatus.OK
+        );
     }
 }
