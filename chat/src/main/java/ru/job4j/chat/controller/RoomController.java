@@ -2,6 +2,7 @@ package ru.job4j.chat.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Room;
@@ -33,31 +34,23 @@ public class RoomController {
     @GetMapping("/{id}")
     public ResponseEntity<Room> findById(@PathVariable int id) {
         var room = roomRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room is not found. Please check the data")
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room with this id is not found")
         );
         return new ResponseEntity<>(room, HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Room> create(@RequestBody Room room) {
-        try {
-            room = roomRepository.save(room);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room name mustn't be empty");
-        }
+    public ResponseEntity<Room> create(@Validated(Operation.OnCreate.class) @RequestBody Room room) {
+        room = roomRepository.save(room);
         return new ResponseEntity<>(room, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Room room) {
+    public ResponseEntity<Void> update(@Validated(Operation.OnUpdate.class) @RequestBody Room room) {
         if (roomRepository.findById(room.getId()).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room with this id is not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room with this id is not found");
         }
-        try {
-            roomRepository.save(room);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room name mustn't be empty");
-        }
+        roomRepository.save(room);
         return ResponseEntity.ok().build();
     }
 
@@ -70,9 +63,10 @@ public class RoomController {
     }
 
     @PatchMapping("/")
-    public ResponseEntity<Room> patch(@RequestBody Room room) throws InvocationTargetException, IllegalAccessException {
+    public ResponseEntity<Room> patch(@Validated(Operation.OnUpdate.class) @RequestBody Room room)
+            throws InvocationTargetException, IllegalAccessException {
         Room patchableRoom = roomRepository.findById(room.getId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room with this id is not found")
         );
         ObjectPatcher.patch(patchableRoom, room);
         return new ResponseEntity<>(

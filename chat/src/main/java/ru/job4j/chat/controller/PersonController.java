@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Person;
@@ -46,19 +47,13 @@ public class PersonController {
     @GetMapping("/{id}")
     public ResponseEntity<Person> findById(@PathVariable int id) {
         var person = personRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person is not found. Please check the data")
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person with this id is not found")
         );
         return new ResponseEntity<>(person, HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Person> create(@RequestBody Person person) {
-        if (person.getLogin().length() < 2) {
-            throw new IllegalArgumentException("Invalid login. Login length must be more than 1 character");
-        }
-        if (person.getPassword().length() < 6) {
-            throw new IllegalArgumentException("Invalid password. Password length must be more than 5 character");
-        }
+    public ResponseEntity<Person> create(@Validated(Operation.OnCreate.class) @RequestBody Person person) {
         Role role = roleRepository.findByRole("ROLE_USER");
         person.setRole(role);
         person.setPassword(bCryptPasswordEncoder.encode(person.getPassword()));
@@ -69,15 +64,9 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    public ResponseEntity<Void> update(@Validated(Operation.OnUpdate.class) @RequestBody Person person) {
         if (personRepository.findById(person.getId()).isEmpty()) {
             throw new IllegalArgumentException("Person with this id is not found");
-        }
-        if (person.getLogin().length() < 2) {
-            throw new IllegalArgumentException("Invalid login. Login length must be more than 1 character");
-        }
-        if (person.getPassword().length() < 6) {
-            throw new IllegalArgumentException("Invalid password. Password length must be more than 5 character");
         }
         personRepository.save(person);
         return ResponseEntity.ok().build();
@@ -92,7 +81,8 @@ public class PersonController {
     }
 
     @PatchMapping("/")
-    public ResponseEntity<Person> patch(@RequestBody Person person) throws InvocationTargetException, IllegalAccessException {
+    public ResponseEntity<Person> patch(@Validated(Operation.OnUpdate.class) @RequestBody Person person)
+            throws InvocationTargetException, IllegalAccessException {
         Person patchablePerson = personRepository.findById(person.getId()).orElseThrow(
                 () -> new IllegalArgumentException("Person with this id is not found")
         );

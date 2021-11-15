@@ -2,6 +2,7 @@ package ru.job4j.chat.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Message;
@@ -33,31 +34,23 @@ public class MessageController {
     @GetMapping("/{id}")
     public ResponseEntity<Message> findById(@PathVariable int id) {
         var message = messageRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message is not found. Please check the data")
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message with this id is not found")
         );
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Message> create(@RequestBody Message message) {
-        try {
-            message = messageRepository.save(message);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Text, person and room mustn't be empty");
-        }
+    public ResponseEntity<Message> create(@Validated(Operation.OnCreate.class) @RequestBody Message message) {
+        message = messageRepository.save(message);
         return new ResponseEntity<>(message, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Message message) {
+    public ResponseEntity<Void> update(@Validated(Operation.OnUpdate.class) @RequestBody Message message) {
         if (messageRepository.findById(message.getId()).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message with this id is not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Message with this id is not found");
         }
-        try {
-            messageRepository.save(message);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Text, person and room mustn't be empty");
-        }
+        messageRepository.save(message);
         return ResponseEntity.ok().build();
     }
 
@@ -70,9 +63,10 @@ public class MessageController {
     }
 
     @PatchMapping("/")
-    public ResponseEntity<Message> patch(@RequestBody Message message) throws InvocationTargetException, IllegalAccessException {
+    public ResponseEntity<Message> patch(@Validated(Operation.OnUpdate.class) @RequestBody Message message)
+            throws InvocationTargetException, IllegalAccessException {
         Message patchableMessage = messageRepository.findById(message.getId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message with this id is not found")
         );
         ObjectPatcher.patch(patchableMessage, message);
         return new ResponseEntity<>(
